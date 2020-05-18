@@ -1,5 +1,5 @@
 # Options Volatility Analysis
-A tool using the Yahoo Finance API to help visualize the implied volatility of an options chain. 
+A tool using the Yahoo Finance API to help visualize implied volatility of an options chain. 
 
 ### Current Features
 - Volatility Smile Visualizer
