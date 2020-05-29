@@ -137,6 +137,7 @@ class VolData:
                 temp = data[(data.maturity == date)]
                 storage.append(temp[temp['strike'].isin(closest_ATM_strikes)].impliedVolatility.mean())
             except:
+                print(date, " failed to be included in the plot")
                 pass
         df = pd.DataFrame([maturities, storage]).T
         df = df.sort_values(0)
