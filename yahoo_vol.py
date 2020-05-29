@@ -116,9 +116,8 @@ class VolData:
         n: integer
             "n" represents number of options above and below at-the-money (ATM) used to calculate the
              volatility term structure. For example, assuming $1 strike differences, if n=3 and ATM Price=100,
-             then the following 7 strikes will be used for calculating the implied volatility term structure:
+             then the following 6 strikes will be used for calculating the implied volatility term structure:
                  - Lower ATM: 97, 98, 99
-                 - ATM: 100
                  - Upper ATM: 101, 102, 103
         Returns
         -------------
