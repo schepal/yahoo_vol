@@ -8,9 +8,8 @@ import datetime
 import sys
 
 class VolData:
-    def __init__(self, ticker, save_csv=False):
+    def __init__(self, ticker):
         self.ticker = ticker
-        self.save_csv = save_csv
         p = yf.Ticker(self.ticker).info
         self.mid_price = (p['ask'] + p['bid'])/2
 
@@ -20,18 +19,16 @@ class VolData:
         ----------
         ticker: string
             The stock ticker of interest
-        save_csv: boolean
-            Select 'True' to save all of the option data in a csv file
         mid_price: integer
             Retrieves the mid-price of the stock which will be used in the class methods
 
         Example
         ---------
-        >>> import yahoo_vol as yvol
-        >>> data = yvol.Options(ticker="AAPL", n=3, save_csv=False)
+        >>> import yahoo_vol as vol
+        >>> data = vol.Options(ticker="AAPL")
         """
 
-    def get_input_data(self):
+    def get_input_data(self, save_csv=False):
         """
         Intermediate function used to collect the pricing data for plotting purposes.
         Parameter:
@@ -44,7 +41,7 @@ class VolData:
         dataframe:
             A dataframe with corresponding statistics for each option
         csv:
-            A csv file will be saved if save_csv is set to True
+            A csv file will be saved if `save_csv` is set to True
 
         Example
         -------------
@@ -68,8 +65,7 @@ class VolData:
         print("All option dates successfully downloaded: ", len(storage) == len(option_dates))
         df = pd.concat(storage)
         df = df.reset_index()
-        #df['maturity'] = pd.DataFrame([i[-15:-9] for i in df.contractSymbol])
-        if self.save_csv==True:
+        if save_csv==True:
             df.to_csv(str(ticker)+"_option_data.csv")
         return df
 
@@ -94,8 +90,7 @@ class VolData:
         for date in maturities:
             call = data[(data.maturity == date) & (data.option_type == 'call')]
             put = data[(data.maturity == date) & (data.option_type == 'put')]
-            #$#title_date = datetime.date(2000 + int(date[:2]),
-            #                           int(date[2:4]), int(date[4:])).strftime("%B %d, %Y")
+            # Plotting Code
             plt.scatter(call.strike, call.impliedVolatility*100, c='g', label='Call Smile', alpha=0.50)
             plt.scatter(put.strike, put.impliedVolatility*100, c='r', label='Put Smile', alpha=0.50)
             plt.axvline(self.mid_price, linestyle='dashed', c='b', alpha=0.30, label='Mid Price (ATM)')
@@ -106,17 +101,17 @@ class VolData:
             plt.show()
 
     def plot_vol_term_structure(self, n=3):
-
         """
         Plots the at-the-money (ATM) implied volatility for each respective option maturity to form
-        a term structure plot.
+        a term structure.
 
         Parameter
         -------------
         n: integer
             "n" represents number of options above and below at-the-money (ATM) used to calculate the
-             volatility term structure. For example, assuming $1 strike differences, if n=3 and ATM Price=100,
-             then the following 6 strikes will be used for calculating the implied volatility term structure:
+             volatility term structure. For example, assuming the strikes are separated by $1, if n=3 
+             and ATM Price=100, then the following 6 strikes will be used for calculating the implied 
+             volatility term structure:
                  - Lower ATM: 97, 98, 99
                  - Upper ATM: 101, 102, 103
         Returns
@@ -130,13 +125,11 @@ class VolData:
         data = self.get_input_data()
         strikes = list(set(data.strike))
         maturities = list(set(data.maturity))
-
         # Find the closest 'n' strikes to the current mid-price to approximate ATM option volatility
         get_closest_strike = min(range(len(strikes)), key=lambda i: abs(strikes[i]- self.mid_price))
         closest_ATM_indexes = list(range(get_closest_strike - (n-1),
                                          get_closest_strike + n))
         closest_ATM_strikes = [strikes[i] for i in closest_ATM_indexes]
-
         # Loop through all maturities to calculate the average implied volatility for each point
         storage = []
         for date in maturities:
@@ -145,11 +138,9 @@ class VolData:
                 storage.append(temp[temp['strike'].isin(closest_ATM_strikes)].impliedVolatility.mean())
             except:
                 pass
-
         df = pd.DataFrame([maturities, storage]).T
         df = df.sort_values(0)
         df = df.dropna()
-
         # Plotting Code
         plt.figure(figsize=(10,5))
         plt.plot(df[0], df[1]*100, marker='o')
